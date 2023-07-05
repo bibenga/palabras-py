@@ -1,0 +1,30 @@
+Django
+# psycopg[binary]
+
+# celery==5.3.0rc1
+# django-celery-beat
+# django-celery-results
+# dramatiq[rabbitmq,redis,watch]
+
+djangorestframework
+django-filter
+uritemplate
+
+pytest
+pytest-asyncio
+pytest-django
+
+django-extensions
+
+unidecode
+
+# channels[daphne]
+# channels-redis
+# daphne
+# Twisted[tls,http2]
+# trustme
+
+# fastapi
+# uvicorn
+# uvicorn[standard]
+# aiofiles

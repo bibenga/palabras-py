@@ -1,0 +1,287 @@
+{% load static %}
+<!-- {# load webpush_notifications #} -->
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <link rel="icon" href="{% static 'slui/favicon-32x32.png' %}">
+
+    <link rel="stylesheet" href="{% static 'slui/bootstrap-5.2.3/css/bootstrap.min.css' %}">
+    <script type="text/javascript" src="{% static 'slui/bootstrap-5.2.3/js/bootstrap.bundle.min.js' %}"></script>
+
+    <!-- {# webpush_header #} -->
+
+    <title>Palabras</title>
+</head>
+
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg  navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img src="{% static 'slui/favicon-32x32.png' %}" width="30" height="30"
+                    class="d-inline-block align-top" alt="">
+                El aprendizaje en LagunaSegura
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo02"
+                aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/studying">Studying</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" aria-current="page" href="/manage">Manage</a>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </nav>
+    <div class="container bd-gutter mt-3 my-md-4 bd-layout">
+        <!-- <div>{# webpush_button #}</div> -->
+        <div class="card">
+            <div class="card-header">
+                Prueba
+            </div>
+            <div class="card-body">
+                <p style="min-height: 3em;">
+                    <span id="text"
+                        style="cursor: default; text-decoration-line: underline; text-decoration-style: dotted;"
+                        data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="replaced"></span>
+                </p>
+
+                <form id="test" method="post" autocomplete="off">
+                    <div class="row">
+                        <div class="col p-3">
+                            <textarea id="answer" name="answer" autofocus
+                                class="form-control form-control-lg"></textarea>
+                            <div class="invalid-feedback">
+                                La respuesta es incorrecta.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <a id="entregar" class="btn btn-lg btn-primary mb-3" role="button">Entregar</a>
+                        </div>
+                        <div class="col text-end">
+                            <a id="siguiente" class="btn btn-lg btn-light mb-3" role="button">Siguiente</a>
+                            <a id="sé" class="btn btn-lg btn-light mb-3" role="button">¡Lo sé!</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="toast-container p-3 top-0 end-0">
+            <div id="séInfo" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto">Notificación</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    ¡Cumplida!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" async>
+        const studyingListUrl = "{% url 'slapi:studying-list'%}";
+        const studyingInstanceUrl = "{% url 'slapi:studying-detail' 'any'%}";
+        const csrfCookieName = "{{ CSRF_COOKIE_NAME }}";
+        const csrfHeaderName = "X-CSRFToken";
+
+        function getCookie(cname) {
+            let name = cname + "=";
+            let decodedCookie = decodeURIComponent(document.cookie);
+            let ca = decodedCookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
+
+        function getCsrfCookie() {
+            return getCookie(csrfCookieName);
+        }
+
+        async function initAsync() {
+            const controller = new AbortController();
+            const response = await fetch(studyingInstanceUrl, {
+                cache: "no-store",
+                signal: controller.signal,
+            });
+            if (response.ok) {
+                const data = await response.json();
+
+                const textEl = document.getElementById("text");
+                textEl.innerText = data["question"];
+                const textElPop = bootstrap.Tooltip.getOrCreateInstance(textEl);
+                textElPop.setContent({ '.tooltip-inner': data["possible_answers"] });
+            } else {
+                console.log(response);
+            }
+        }
+
+        async function nextTestAsync() {
+            var formEl = document.getElementById("test")
+            formEl.classList.remove("was-validated");
+
+            var answerEl = document.getElementById("answer");
+            answerEl.classList.remove("is-invalid");
+            answerEl.value = "";
+            answerEl.focus();
+
+            var textEl = document.getElementById("text");
+            textEl.innerText = "";
+            var textElPop = bootstrap.Tooltip.getOrCreateInstance(textEl);
+            textElPop.setContent({ '.tooltip-inner': "" });
+
+            var response = await fetch(studyingListUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCsrfCookie(),
+                },
+            });
+            if (response.ok) {
+                var data = await response.json();
+                textEl.innerText = data["question"];
+                var textElPop = bootstrap.Tooltip.getOrCreateInstance(textEl);
+                textElPop.setContent({ '.tooltip-inner': data["possible_answers"] });
+            } else {
+                console.log(response);
+            }
+        }
+
+        async function validateAnswerAsync() {
+            var formEl = document.getElementById("test")
+            var answerEl = document.getElementById("answer")
+
+            const setValid = () => {
+                formEl.classList.add("was-validated");
+                answerEl.classList.remove("is-invalid");
+            }
+            const setInvalid = () => {
+                formEl.classList.remove("was-validated");
+                answerEl.classList.add("is-invalid");
+                answerEl.focus();
+            }
+
+            if (answerEl.value == "") {
+                setInvalid();
+            } else {
+                var response = await fetch(studyingInstanceUrl, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCsrfCookie(),
+                    },
+                    body: JSON.stringify({
+                        "answer": answerEl.value
+                    }),
+                });
+                if (response.ok) {
+                    var data = await response.json();
+                    if (data["is_passed_flg"]) {
+                        setValid();
+                    } else {
+                        setInvalid();
+                    }
+                } else {
+                    console.log(response);
+                    setInvalid();
+                }
+            }
+        }
+
+        async function iKnowAsync() {
+            var response = await fetch(studyingInstanceUrl + "i-know/", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCsrfCookie(),
+                },
+            });
+            if (response.ok) {
+                var séInfoEl = document.getElementById("séInfo")
+                var séInfoT = bootstrap.Toast.getOrCreateInstance(séInfoEl);
+                séInfoT.show();
+
+                nextTestAsync();
+            } else {
+                console.log(response);
+            }
+        }
+
+        async function validateOrNextAsync() {
+            var formEl = document.getElementById("test")
+            if (formEl.classList.contains("was-validated")) {
+                await nextTestAsync();
+            } else {
+                await validateAnswerAsync();
+            }
+        }
+
+        function documentOnLoad(event) {
+            const tooltip = new bootstrap.Tooltip('#text', {})
+
+            const toastElList = document.querySelectorAll('.toast')
+            const toastList = [...toastElList].map(toastEl => new bootstrap.Toast(toastEl))
+
+            var entregarEl = document.getElementById("entregar");
+            entregarEl.addEventListener("click", event => {
+                validateOrNextAsync();
+                event.preventDefault();
+                event.stopPropagation();
+                return false;
+            });
+
+            var answerEl = document.getElementById("answer")
+            answerEl.addEventListener("keydown", event => {
+                if (event.which === 13 && !event.shiftKey) {
+                    validateOrNextAsync();
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return false;
+                }
+            });
+
+            var siguienteEl = document.getElementById("siguiente");
+            siguienteEl.addEventListener("click", event => {
+                nextTestAsync();
+                event.preventDefault();
+                event.stopPropagation();
+                return false;
+            });
+
+            var séEl = document.getElementById("sé");
+            séEl.addEventListener("click", event => {
+                iKnowAsync();
+                event.preventDefault();
+                event.stopPropagation();
+                return false;
+            });
+
+            initAsync();
+        }
+
+        document.addEventListener("DOMContentLoaded", documentOnLoad);
+    </script>
+</body>
+
+</html>

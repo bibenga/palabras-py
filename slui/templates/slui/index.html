@@ -1,0 +1,33 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <link rel="icon" href="{% static 'slui/favicon-32x32.png' %}">
+
+    <link rel="stylesheet" href="{% static 'slui/bootstrap-5.2.3/css/bootstrap.min.css' %}">
+    <script type="text/javascript" src="{% static 'slui/bootstrap-5.2.3/js/bootstrap.bundle.min.js' %}"></script>
+
+    <title>Palabras</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Aprender</h1>
+        {% if user.is_authenticated %}
+        <p>¡Hola {{request.user}}!</p>
+        <p><a href="{% url 'studying'%}">Studying</a></p>
+        {% else %}
+        <p>¡Hola, ¿cómo te llamas?</p>
+        <p><a href="{% url 'index'%}">Login</a></p>
+        <p><a href="{% url 'register'%}">Register</a></p>
+        {% endif %}
+    </div>
+
+</body>
+
+</html>

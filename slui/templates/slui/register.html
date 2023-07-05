@@ -1,0 +1,49 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <link rel="icon" href="{% static 'slui/favicon-32x32.png' %}">
+
+    <link rel="stylesheet" href="{% static 'slui/bootstrap-5.2.3/css/bootstrap.min.css' %}">
+
+    <title>Palabras</title>
+</head>
+
+
+<body class="bg-light text-center">
+    <div class="container">
+        <div class="position-absolute top-50 start-50 translate-middle">
+            <form class="form-signin">
+                <img class="mb-4" src="{% static 'slui/favicon-32x32.png' %}" alt="" width="72" height="72">
+                <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
+
+                <div class="mb-3">
+                    <!-- <label for="inputEmail" class="sr-only">Email address</label> -->
+                    <input type="email" id="inputEmail" class="form-control" placeholder="Email address" required
+                        autofocus>
+                </div>
+                <div class="mb-3">
+                    <!-- <label for="inputPassword" class="sr-only">Password</label> -->
+                    <input type="password" id="inputPassword" class="form-control" placeholder="Password" required>
+                </div>
+
+                <div class="checkbox mb-3">
+                    <label>
+                        <input type="checkbox" value="remember-me"> Remember me
+                    </label>
+                </div>
+
+                <button class="btn btn-lg btn-primary btn-block" type="submit">Register / Sign in</button>
+
+                <p class="mt-5 mb-3 text-muted">&copy; 2023</p>
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>
