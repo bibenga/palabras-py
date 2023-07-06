@@ -9,6 +9,7 @@ Django
 djangorestframework
 django-filter
 uritemplate
+pyyaml
 
 pytest
 pytest-asyncio
