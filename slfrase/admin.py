@@ -10,13 +10,14 @@ class PhraseAdmin(admin.ModelAdmin):
     model = TextPair
     list_display = ("user", "text1", "text2", "is_learned_flg")
     list_select_related = ("user", )
+    list_display_links = ("user", "text1", "text2")
     search_fields = ("text1", "text2")
     actions = ("clear_is_learned_flg",)
     fields = ("user", "text1", "text2",
               "is_learned_flg", "learned_ts", "comment")
     raw_id_fields = ("user",)
     readonly_fields = ("learned_ts",)
-    ordering = ("user",)
+    ordering = ("user", "text1", "text2")
     formfield_overrides = {
         models.TextField: {"widget": forms.Textarea(attrs={"rows": 4, "cols": 80})},
     }

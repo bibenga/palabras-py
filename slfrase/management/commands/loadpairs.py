@@ -1,3 +1,4 @@
+import re
 from django.core.management.base import BaseCommand
 from slfrase.models import TextPair
 from django.db import models
@@ -8,26 +9,19 @@ from django.contrib.auth import get_user_model
 class Command(BaseCommand):
     help = "Load text pairs"
 
-# (.+)	(.+)
-# ("$1", "$2"),
-    data = [
-        ("decir", "сказать\nговорить"),
-        ("empezar\ncomenzar", "начать\nначинать"),
-        ("dar", "давать"),
-        ("volver", "возвращаться"),
-        ("abrir", "открывать"),
-        ("cerrar", "закрыть"),
-        ("contar", "считать"),
-        ("encontrar", "находить"),
-        ("contestar", "отвечать"),
-        ("Nadie", "Ни кто"),
-        ("Nada", "Ни что\nНичего"),
-    ]
-
     def handle(self, *args, **options):
+        with open('es-ru.txt', 'r', encoding='utf-8') as f:
+            newWords = f.readlines()
+        newWords = [s.lower().strip() for s in newWords]
+        newWords = [s for s in newWords if s and not s.startswith('#')]
+        newWords = [re.split('\s*-\s*', s) for s in newWords]
+        newWords = [[s1.strip(), s2.strip()] for s1,s2 in newWords]
+        newWords = [[re.split('\s*,\s*', s1), re.split('\s*,\s*', s2)] for s1,s2 in newWords]
+        newWords = [['\n'.join(s1), '\n'.join(s2)] for s1,s2 in newWords]
+
         User = get_user_model()
         user = User.objects.filter(username="a").get()
-        for text1, text2 in self.data:
+        for text1, text2 in newWords:
             p = TextPair.objects.annotate(
                 text1_lower=Lower('text1'),
                 text2_lower=Lower('text2'),
