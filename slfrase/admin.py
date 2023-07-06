@@ -43,8 +43,3 @@ class StudyStateAdmin(admin.ModelAdmin):
               "created_ts")
     raw_id_fields = ("text_pair", )
     readonly_fields = ("passed_ts", "created_ts",)
-
-
-#     question = models.TextField(max_length=2048, blank=False)
-    # possible_answers = models.TextField(max_length=2048, blank=False)
-    # answer = models.TextField(max_length=2048, blank=True)

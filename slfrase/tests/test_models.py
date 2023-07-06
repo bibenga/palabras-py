@@ -31,6 +31,7 @@ def test_get_text_list() -> None:
     text_list = ("Uno", "Dos, Mas")
     assert TextPair.get_text_list(text) == text_list
 
+
 def test_get_words() -> None:
     frase = "Uño Dos, Más"
     words = ("Uno", "Dos", "Mas")
