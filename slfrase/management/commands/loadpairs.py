@@ -23,7 +23,6 @@ class Command(BaseCommand):
             pairs = [s for s in pairs if len(s) > 0]
             pairs = [s for s in pairs if s and not s.startswith('#')]
             pairs = [re.split('\s+-\s+', s) for s in pairs]
-            pprint([s for s in pairs if len(s) != 2])
             pairs = [[s1.strip(), s2.strip()] for s1, s2 in pairs]
             pairs = [[re.split('\s*,\s*', s1), re.split('\s*,\s*', s2)]
                      for s1, s2 in pairs]
