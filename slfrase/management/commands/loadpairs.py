@@ -1,3 +1,4 @@
+from pprint import pprint
 import re
 from django.core.management.base import BaseCommand
 from slfrase.models import TextPair
@@ -9,47 +10,56 @@ from django.contrib.auth import get_user_model
 class Command(BaseCommand):
     help = "Load text pairs"
 
-    def handle(self, *args, **options):
-        with open('es-ru.txt', 'r', encoding='utf-8') as f:
-            newWords = f.readlines()
-        newWords = [s.lower().strip() for s in newWords]
-        newWords = [s for s in newWords if s and not s.startswith('#')]
-        newWords = [re.split('\s*-\s*', s) for s in newWords]
-        newWords = [[s1.strip(), s2.strip()] for s1,s2 in newWords]
-        newWords = [[re.split('\s*,\s*', s1), re.split('\s*,\s*', s2)] for s1,s2 in newWords]
-        newWords = [['\n'.join(s1), '\n'.join(s2)] for s1,s2 in newWords]
+    def add_arguments(self, parser):
+        # Positional arguments
+        parser.add_argument("files", nargs="+")
 
-        User = get_user_model()
-        user = User.objects.filter(username="a").get()
-        for text1, text2 in newWords:
-            p = TextPair.objects.annotate(
-                text1_lower=Lower('text1'),
-                text2_lower=Lower('text2'),
-            ).filter(
-                models.Q(user=user),
-                models.Q(
-                    text1_lower=Lower(models.Value(text1))
-                ) | models.Q(
-                    text2_lower=Lower(models.Value(text2))
-                ),
-            ).first()
-            if p:
-                if p.text1 != text1 or p.text2 != text2:
-                    p.text1 = text1
-                    p.text2 = text2
-                    p.save()
+    def handle(self, *args, **options):
+        print(options["files"])
+        for filename in options["files"]:
+            with open(filename, 'r', encoding='utf-8') as f:
+                pairs = f.readlines()
+            pairs = [s.lower().strip() for s in pairs]
+            pairs = [s for s in pairs if len(s) > 0]
+            pairs = [s for s in pairs if s and not s.startswith('#')]
+            pairs = [re.split('\s+-\s+', s) for s in pairs]
+            pprint([s for s in pairs if len(s) != 2])
+            pairs = [[s1.strip(), s2.strip()] for s1, s2 in pairs]
+            pairs = [[re.split('\s*,\s*', s1), re.split('\s*,\s*', s2)]
+                     for s1, s2 in pairs]
+            pairs = [['\n'.join(s1), '\n'.join(s2)] for s1, s2 in pairs]
+
+            User = get_user_model()
+            user = User.objects.filter(username="a").get()
+            for text1, text2 in pairs:
+                p = TextPair.objects.annotate(
+                    text1_lower=Lower('text1'),
+                    text2_lower=Lower('text2'),
+                ).filter(
+                    models.Q(user=user),
+                    models.Q(
+                        text1_lower=Lower(models.Value(text1))
+                    ) | models.Q(
+                        text2_lower=Lower(models.Value(text2))
+                    ),
+                ).first()
+                if p:
+                    if p.text1 != text1 or p.text2 != text2:
+                        p.text1 = text1
+                        p.text2 = text2
+                        p.save()
+                        self.stdout.write(self.style.SUCCESS(
+                            f'\tUpdated {p.pk}: "{text1[:10]}...", "{text2[:10]}..."'
+                        ))
+                else:
+                    p = TextPair.objects.create(
+                        user=user,
+                        text1=text1,
+                        text2=text2,
+                    )
                     self.stdout.write(self.style.SUCCESS(
-                        f'\tUpdated {p.pk}: "{text1[:10]}...", "{text2[:10]}..."'
+                        f'\tCreated {p.pk}: "{text1[:10]}...", "{text2[:10]}..."'
                     ))
-            else:
-                p = TextPair.objects.create(
-                    user=user,
-                    text1=text1,
-                    text2=text2,
-                )
-                self.stdout.write(self.style.SUCCESS(
-                    f'\tCreated {p.pk}: "{text1[:10]}...", "{text2[:10]}..."'
-                ))
-        self.stdout.write(self.style.SUCCESS(
-            'Successfully loaded all pairs'
-        ))
+            self.stdout.write(self.style.SUCCESS(
+                f'All pairs from "{filename}" was loaded successfully'
+            ))
