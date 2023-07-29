@@ -21,14 +21,7 @@ app = FastAPI()
 basic_security = HTTPBasic()
 
 
-def auth_failed():
-    raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            # headers={"WWW-Authenticate": "Basic"},
-        )
-
-async def get_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(basic_security)]) -> User | None:
+async def get_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(basic_security)]) -> User:
     async with async_session(expire_on_commit=False) as session:
         dbres = await session.execute(select(User).where(
             User.username == credentials.username
@@ -36,18 +29,30 @@ async def get_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(
         user = dbres.scalar_one_or_none()
         if user != None:
             if not user.is_active:
-                auth_failed()
-            
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Incorrect username or password",
+                    # headers={"WWW-Authenticate": "Basic"},
+                )
+
             hasher = PBKDF2PasswordHasher()
             if not hasher.verify(credentials.password, user.password):
-                auth_failed()
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Incorrect username or password",
+                    # headers={"WWW-Authenticate": "Basic"},
+                )
 
             user.last_login = datetime.now(timezone.utc)
             await session.commit()
 
             return user
-        
-        auth_failed()
+
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            # headers={"WWW-Authenticate": "Basic"},
+        )
 
 
 class TextPairDto(BaseModel):
