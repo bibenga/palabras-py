@@ -1,5 +1,6 @@
+from datetime import datetime
 from typing import List
-from sqlalchemy import ForeignKey, String, Boolean, false
+from sqlalchemy import ForeignKey, String, Boolean, false, DateTime
 from sqlalchemy.orm import DeclarativeBase, Mapped, relationship,  mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs
 
@@ -27,6 +28,7 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(150),  unique=True)
     password: Mapped[str] = mapped_column(String(128))
     is_active: Mapped[bool]
+    last_login: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     text_pairs: Mapped[List["TextPair"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"

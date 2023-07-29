@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Annotated, List
 from fastapi import status, Depends, FastAPI, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
@@ -10,7 +11,7 @@ from slapi.models import TextPair, User
 
 engine = create_async_engine(
     "sqlite+aiosqlite:///db.sqlite3",
-    echo=False,
+    echo=True,
 )
 
 async_session = async_sessionmaker(engine, expire_on_commit=True)
@@ -28,7 +29,7 @@ def auth_failed():
         )
 
 async def get_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(basic_security)]) -> User | None:
-    async with async_session() as session:
+    async with async_session(expire_on_commit=False) as session:
         dbres = await session.execute(select(User).where(
             User.username == credentials.username
         ))
@@ -40,6 +41,9 @@ async def get_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(
             hasher = PBKDF2PasswordHasher()
             if not hasher.verify(credentials.password, user.password):
                 auth_failed()
+
+            user.last_login = datetime.now(timezone.utc)
+            await session.commit()
 
             return user
         
