@@ -1,7 +1,9 @@
 {
+    "python.defaultInterpreterPath": "/usr/local/bin/python",
     "python.testing.pytestArgs": [
         "."
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "python.analysis.typeCheckingMode": "basic"
 }
