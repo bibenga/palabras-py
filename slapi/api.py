@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from django.contrib.auth.hashers import PBKDF2PasswordHasher
-from django.core.paginator import Paginator
 from slapi.models import TextPair, User
 
 engine = create_async_engine(
