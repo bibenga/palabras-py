@@ -68,8 +68,8 @@ class TextPairDto(BaseModel):
     is_learned_flg: bool
 
 
-@app.get("/items")
-async def read_items(user: User = Depends(get_current_user)) -> List[TextPairDto]:
+@app.get("/pairs")
+async def get_pairs(user: User = Depends(get_current_user)) -> List[TextPairDto]:
     res: List[TextPairDto] = []
     async with async_session() as session:
         dbres = await session.execute(select(TextPair).where(
@@ -86,8 +86,8 @@ async def read_items(user: User = Depends(get_current_user)) -> List[TextPairDto
     return res
 
 
-@app.get("/items/{id}")
-async def read_item(
+@app.get("/pairs/{id}")
+async def get_pair(
     id: int,
     user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
