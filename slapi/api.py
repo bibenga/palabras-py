@@ -1,20 +1,49 @@
-from typing import List
-from fastapi import FastAPI, HTTPException
+from typing import Annotated, List
+from fastapi import status, Depends, FastAPI, HTTPException
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from django.contrib.auth.hashers import PBKDF2PasswordHasher
 
-from slapi.models import TextPair
+from slapi.models import TextPair, User
 
 engine = create_async_engine(
     "sqlite+aiosqlite:///db.sqlite3",
-    echo=True,
+    echo=False,
 )
 
 async_session = async_sessionmaker(engine, expire_on_commit=True)
 
 
 app = FastAPI()
+basic_security = HTTPBasic()
+
+
+def auth_failed():
+    raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            # headers={"WWW-Authenticate": "Basic"},
+        )
+
+async def get_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(basic_security)]) -> User | None:
+    async with async_session() as session:
+        dbres = await session.execute(select(User).where(
+            User.username == credentials.username
+        ))
+        user = dbres.scalar_one_or_none()
+        if user != None:
+            if not user.is_active:
+                auth_failed()
+            
+            hasher = PBKDF2PasswordHasher()
+            if not hasher.verify(credentials.password, user.password):
+                auth_failed()
+
+            return user
+        
+        auth_failed()
 
 
 class TextPairDto(BaseModel):
@@ -26,11 +55,15 @@ class TextPairDto(BaseModel):
 
 
 @app.get("/items")
-async def read_items() -> List[TextPairDto]:
+async def read_items(user: Annotated[User, Depends(get_current_user)]) -> List[TextPairDto]:
     res: List[TextPairDto] = []
 
+    print('read_items: user', user.id)
+
     async with async_session() as session:
-        dbres = await session.execute(select(TextPair))
+        dbres = await session.execute(select(TextPair).where(
+            TextPair.user_id == user.id
+        ))
         for d in dbres.scalars():
             res.append(TextPairDto(
                 id=d.id,
@@ -44,9 +77,12 @@ async def read_items() -> List[TextPairDto]:
 
 
 @app.get("/items/{id}")
-async def read_item(id: int) -> TextPairDto:
+async def read_item(user: Annotated[User, Depends(get_current_user)], id: int) -> TextPairDto:
     async with async_session() as session:
-        dbres = await session.execute(select(TextPair).where(TextPair.id == id))
+        dbres = await session.execute(select(TextPair).where(
+            TextPair.user_id == user.id,
+            TextPair.id == id
+        ))
         d = dbres.scalar_one_or_none()
         if d != None:
             return TextPairDto(
