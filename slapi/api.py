@@ -1,12 +1,13 @@
 from datetime import datetime, timezone
-from typing import Annotated, AsyncIterator, List
-from fastapi import status, Depends, FastAPI, HTTPException
+from math import ceil
+from typing import Annotated, AsyncIterator, Generic, List, TypeVar
+from fastapi import Query, status, Depends, FastAPI, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from pydantic import BaseModel
-from sqlalchemy import select
+from pydantic import BaseModel, Field
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from django.contrib.auth.hashers import PBKDF2PasswordHasher
-
+from django.core.paginator import Paginator
 from slapi.models import TextPair, User
 
 engine = create_async_engine(
@@ -60,6 +61,17 @@ async def get_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(
         )
 
 
+M = TypeVar('M')
+
+
+class PaginatedResponse(BaseModel, Generic[M]):
+    count: int = Field(description='Number of items')
+    page: int = Field(description='')
+    page_size: int = Field(description='')
+    page_count: int = Field(description='')
+    items: List[M] = Field(description='List of items ')
+
+
 class TextPairDto(BaseModel):
     id: int
     user_id: int
@@ -68,13 +80,23 @@ class TextPairDto(BaseModel):
     is_learned_flg: bool
 
 
-@app.get("/pairs")
-async def get_pairs(user: User = Depends(get_current_user)) -> List[TextPairDto]:
+@app.get("/pairs", response_model=PaginatedResponse[TextPairDto])
+async def get_pairs(user: User = Depends(get_current_user),
+                    page: int = Query(1, ge=1),
+                    page_size: int = Query(10, gte=10, le=100)):
     res: List[TextPairDto] = []
     async with async_session() as session:
-        dbres = await session.execute(select(TextPair).where(
+        query = select(TextPair).where(
             TextPair.user_id == user.id
-        ))
+        )
+
+        count_res = await session.execute(select(func.count()).select_from(query.subquery()))
+        count = count_res.scalar_one()
+
+        limit = page_size * page
+        offset = (page - 1) * page_size
+
+        dbres = await session.execute(query.offset(offset).limit(limit))
         for d in dbres.scalars():
             res.append(TextPairDto(
                 id=d.id,
@@ -83,7 +105,13 @@ async def get_pairs(user: User = Depends(get_current_user)) -> List[TextPairDto]
                 text2=d.text2,
                 is_learned_flg=d.is_learned_flg,
             ))
-    return res
+    return {
+        "count": count,
+        "page": page,
+        "page_size": page_size,
+        "page_count": ceil(max(1, count - 0) / page_size),
+        "items": res,
+    }
 
 
 @app.get("/pairs/{id}")
