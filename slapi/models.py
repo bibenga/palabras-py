@@ -56,13 +56,22 @@ class TextPair(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("slid_user.id"))
     user: Mapped["User"] = relationship(back_populates="text_pairs")
-    text1: Mapped[str] = mapped_column(String())
-    text2: Mapped[str] = mapped_column(String())
+    text1: Mapped[str]
+    text2: Mapped[str]
+    comment: Mapped[str]
     is_learned_flg: Mapped[bool] = mapped_column(
         Boolean(), default=False, server_default=false())
+    learned_ts: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_ts: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    modified_ts: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+    study_states: Mapped[List["StudyState"]] = relationship(
+        back_populates="text_pair", cascade="all, delete-orphan"
+    )
 
     # async def __admin_repr__(self, request: Request):
     #     return f'{self.text1} / {self.text2}'
+
 
 class StudyState(Base):
     __tablename__ = "slfrase_studystate"
@@ -78,3 +87,13 @@ class StudyState(Base):
     # "question" text NOT NULL
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    text_pair_id: Mapped[int] = mapped_column(ForeignKey("slfrase_textpair.id"))
+    text_pair: Mapped["TextPair"] = relationship(back_populates="study_states")
+    question: Mapped[str]
+    possible_answers: Mapped[str]
+    answer: Mapped[str]
+    is_passed_flg: Mapped[bool] = mapped_column(Boolean(), default=False)
+    is_skipped_flg: Mapped[bool] = mapped_column(Boolean(), default=False)
+    passed_ts: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_ts: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    modified_ts: Mapped[datetime] = mapped_column(DateTime(timezone=True))
