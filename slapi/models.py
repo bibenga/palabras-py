@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 from fastapi import Request
-from sqlalchemy import ForeignKey, String, Boolean, false, DateTime
+from sqlalchemy import ForeignKey, String, Boolean, false, DateTime, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, relationship,  mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs
 
@@ -94,6 +94,6 @@ class StudyState(Base):
     answer: Mapped[str]
     is_passed_flg: Mapped[bool] = mapped_column(Boolean(), default=False)
     is_skipped_flg: Mapped[bool] = mapped_column(Boolean(), default=False)
-    passed_ts: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    created_ts: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    modified_ts: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    passed_ts: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now())
+    modified_ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now())

@@ -4,11 +4,12 @@ from starlette.responses import Response
 from starlette.middleware import Middleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette_admin.actions import action
-from starlette_admin.contrib.sqla import Admin, ModelView
-from slapi.models import TextPair, User
+from starlette_admin.contrib.sqla.admin import Admin
+from starlette_admin.contrib.sqla.view import ModelView
+from slapi.models import StudyState, TextPair, User
 from slapi.db import engine, async_session
 from starlette_admin.auth import AdminUser, AuthProvider
-from starlette_admin.exceptions import FormValidationError, LoginFailed
+from starlette_admin.exceptions import LoginFailed
 
 
 class UsernameAndPasswordProvider(AuthProvider):
@@ -25,12 +26,6 @@ class UsernameAndPasswordProvider(AuthProvider):
         request: Request,
         response: Response,
     ) -> Response:
-        # if len(username) < 3:
-        #     """Form data validation"""
-        #     raise FormValidationError(
-        #         {"username": "Ensure username has at least 03 characters"}
-        #     )
-
         async with async_session(expire_on_commit=False) as session:
             dbres = await session.execute(select(User).where(
                 User.username == username
@@ -130,3 +125,12 @@ class TextPairModelView(ModelView):
 
 
 admin.add_view(TextPairModelView(TextPair))
+
+
+class StudyStateModelView(ModelView):
+    # exclude_fields_from_list = [User.password]
+    exclude_fields_from_create = [StudyState.created_ts, StudyState.modified_ts]
+    exclude_fields_from_edit = [StudyState.created_ts, StudyState.modified_ts]
+
+
+admin.add_view(StudyStateModelView(StudyState))
