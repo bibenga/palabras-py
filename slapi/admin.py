@@ -68,7 +68,11 @@ class UsernameAndPasswordProvider(AuthProvider):
 # Create admin
 admin = Admin(engine, title="Palabras admin",
               auth_provider=UsernameAndPasswordProvider(),
-              middlewares=[Middleware(SessionMiddleware, secret_key="SuperSecret :)")],
+              middlewares=[Middleware(
+                  SessionMiddleware,
+                  secret_key="SuperSecret :)",
+                  session_cookie="starlette_session")
+              ],
               debug=True)
 
 
