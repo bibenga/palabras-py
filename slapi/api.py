@@ -1,24 +1,25 @@
 from datetime import datetime, timezone
+import logging
 from math import ceil
 from typing import Annotated, AsyncIterator, Generic, List, TypeVar
 from fastapi import Query, status, Depends, FastAPI, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 from django.contrib.auth.hashers import PBKDF2PasswordHasher
 from slapi.models import TextPair, User
-
-engine = create_async_engine(
-    "sqlite+aiosqlite:///db.sqlite3",
-    echo=True,
-)
-
-async_session = async_sessionmaker(engine, expire_on_commit=True)
+from slapi.db import async_session
 
 
 app = FastAPI()
 basic_security = HTTPBasic()
+
+try:
+    from slapi.admin import admin
+    admin.mount_to(app)
+except ImportError:
+    logging.getLogger().fatal('admin not installed', exc_info=True)
 
 
 async def get_session() -> AsyncIterator[AsyncSession]:

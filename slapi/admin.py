@@ -1,0 +1,124 @@
+from sqlalchemy import select, update
+from starlette.requests import Request
+from starlette.responses import Response
+from starlette.middleware import Middleware
+from starlette.middleware.sessions import SessionMiddleware
+from starlette_admin.actions import action
+from starlette_admin.contrib.sqla import Admin, ModelView
+from slapi.models import TextPair, User
+from slapi.db import engine, async_session
+from starlette_admin.auth import AdminUser, AuthProvider
+from starlette_admin.exceptions import FormValidationError, LoginFailed
+
+
+class UsernameAndPasswordProvider(AuthProvider):
+    """
+    This is only for demo purpose, it's not a better
+    way to save and validate user credentials
+    """
+
+    async def login(
+        self,
+        username: str,
+        password: str,
+        remember_me: bool,
+        request: Request,
+        response: Response,
+    ) -> Response:
+        # if len(username) < 3:
+        #     """Form data validation"""
+        #     raise FormValidationError(
+        #         {"username": "Ensure username has at least 03 characters"}
+        #     )
+
+        async with async_session(expire_on_commit=False) as session:
+            dbres = await session.execute(select(User).where(
+                User.username == username
+            ))
+            user = dbres.scalar_one_or_none()
+            if user == None:
+                raise LoginFailed("Invalid username or password")
+
+            request.session.update({"user_id": user.id})
+            return response
+
+    async def is_authenticated(self, request) -> bool:
+        user_id = request.session.get("user_id", None)
+        if user_id:
+            async with async_session(expire_on_commit=False) as session:
+                dbres = await session.execute(select(User).where(
+                    User.id == user_id
+                ))
+                user = dbres.scalar_one_or_none()
+                if user != None:
+                    request.state.user = user
+                    return True
+
+        return False
+
+    def get_admin_user(self, request: Request) -> AdminUser:
+        user = request.state.user
+        return AdminUser(username=user.username, photo_url=None)
+
+    async def logout(self, request: Request, response: Response) -> Response:
+        request.session.clear()
+        return response
+
+
+# Create admin
+admin = Admin(engine, title="Palabras admin",
+              auth_provider=UsernameAndPasswordProvider(),
+              middlewares=[Middleware(SessionMiddleware, secret_key="SuperSecret :)")],)
+
+
+class UserModelView(ModelView):
+    # fields = [User.id, User.username]
+    exclude_fields_from_list = [User.password, User.text_pairs]
+
+
+admin.add_view(UserModelView(User))
+
+
+class TextPairModelView(ModelView):
+    fields = ["id", "user", "text1", "text2", "is_learned_flg"]
+
+    @action(
+        name="mark_learned",
+        text="Mark as learned",
+        confirmation="Are you sure you want to mark selected pairs as learned?",
+        submit_btn_text="Yes",
+        submit_btn_class="btn-success",
+    )
+    async def mark_learned(self, request: Request, pks: list) -> str:
+        async with async_session() as session:
+            await session.execute(
+                update(TextPair),
+                [
+                    {'id': int(pk), 'is_learned_flg': True}
+                    for pk in pks
+                ]
+            )
+            await session.commit()
+        return "{} pairs were successfully marked as learned".format(len(pks))
+
+    @action(
+        name="mark_unknown",
+        text="Mark as unknown",
+        confirmation="Are you sure you want to mark selected pairs as unknown?",
+        submit_btn_text="Yes",
+        submit_btn_class="btn-success",
+    )
+    async def mark_unknown(self, request: Request, pks: list) -> str:
+        async with async_session() as session:
+            await session.execute(
+                update(TextPair).where(
+                    TextPair.id.in_(pks)
+                ).values(
+                    is_learned_flg=False
+                )
+            )
+            await session.commit()
+        return "{} pairs were successfully marked as unknown".format(len(pks))
+
+
+admin.add_view(TextPairModelView(TextPair))
