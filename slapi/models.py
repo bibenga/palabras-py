@@ -29,6 +29,8 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(150),  unique=True)
     password: Mapped[str] = mapped_column(String(128))
     is_active: Mapped[bool]
+    is_staff: Mapped[bool]
+    is_superuser: Mapped[bool]
     last_login: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     text_pairs: Mapped[List["TextPair"]] = relationship(

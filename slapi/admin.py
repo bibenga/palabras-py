@@ -50,7 +50,7 @@ class UsernameAndPasswordProvider(AuthProvider):
                     User.id == user_id
                 ))
                 user = dbres.scalar_one_or_none()
-                if user != None:
+                if user != None and user.is_active and (user.is_superuser or user.is_staff):
                     request.state.user = user
                     return True
 
@@ -72,8 +72,11 @@ admin = Admin(engine, title="Palabras admin",
 
 
 class UserModelView(ModelView):
-    # fields = [User.id, User.username]
-    exclude_fields_from_list = [User.password, User.text_pairs]
+    fields = [User.id, User.username, User.password,
+              User.is_active, User.is_superuser, User.is_staff]
+    exclude_fields_from_detail = [User.password]
+    exclude_fields_from_list = [User.password]
+    exclude_fields_from_edit = [User.password]
 
 
 admin.add_view(UserModelView(User))
