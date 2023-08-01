@@ -105,13 +105,13 @@ async def get_pairs(user: User = Depends(get_current_user),
                 text2=d.text2,
                 is_learned_flg=d.is_learned_flg,
             ))
-    return {
-        "count": count,
-        "page": page,
-        "page_size": page_size,
-        "page_count": ceil(max(1, count - 0) / page_size),
-        "items": res,
-    }
+    return PaginatedResponse[TextPairDto](
+        count=count,
+        page=page,
+        page_size=page_size,
+        page_count=ceil(max(1, count - 0) / page_size),
+        items=res,
+    )
 
 
 @app.get("/pairs/{id}")
