@@ -22,9 +22,15 @@ except ImportError:
     logging.getLogger().fatal('admin not installed', exc_info=True)
 
 
-async def get_session() -> AsyncIterator[AsyncSession]:
+async def get_read_session() -> AsyncIterator[AsyncSession]:
     async with async_session() as session:
         yield session
+
+
+async def get_write_session() -> AsyncIterator[AsyncSession]:
+    async with async_session() as session:
+        yield session
+        await session.commit()
 
 
 async def get_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(basic_security)]) -> User:
@@ -51,6 +57,7 @@ async def get_current_user(credentials: Annotated[HTTPBasicCredentials, Depends(
 
             user.last_login = datetime.now(timezone.utc)
             await session.commit()
+            session.expunge(user)
 
             return user
 
@@ -66,18 +73,23 @@ M = TypeVar('M')
 
 class PaginatedResponse(BaseModel, Generic[M]):
     count: int = Field(description='Number of items')
-    page: int = Field(description='')
-    page_size: int = Field(description='')
-    page_count: int = Field(description='')
-    items: List[M] = Field(description='List of items ')
+    page: int = Field(description='Requested page number')
+    page_size: int = Field(description='Requested page size')
+    page_count: int = Field(description='Total pages for requested page size')
+    items: List[M] = Field(description='List of items')
 
 
 class TextPairDto(BaseModel):
     id: int
     user_id: int
-    text1: str
-    text2: str
+    text1: list[str]
+    text2: list[str]
     is_learned_flg: bool
+
+
+def split_text_pair(t: str) -> list[str]:
+    res = [x.strip() for x in t.splitlines()]
+    return [x for x in res if res]
 
 
 @app.get("/pairs", response_model=PaginatedResponse[TextPairDto])
@@ -93,18 +105,18 @@ async def get_pairs(user: User = Depends(get_current_user),
         count_res = await session.execute(select(func.count()).select_from(query.subquery()))
         count = count_res.scalar_one()
 
-        limit = page_size * page
         offset = (page - 1) * page_size
-
-        dbres = await session.execute(query.offset(offset).limit(limit))
-        for d in dbres.scalars():
-            res.append(TextPairDto(
-                id=d.id,
-                user_id=d.user_id,
-                text1=d.text1,
-                text2=d.text2,
-                is_learned_flg=d.is_learned_flg,
-            ))
+        limit = page_size * page
+        if offset < count:
+            dbres = await session.execute(query.offset(offset).limit(limit))
+            for d in dbres.scalars():
+                res.append(TextPairDto(
+                    id=d.id,
+                    user_id=d.user_id,
+                    text1=split_text_pair(d.text1),
+                    text2=split_text_pair(d.text2),
+                    is_learned_flg=d.is_learned_flg,
+                ))
     return PaginatedResponse[TextPairDto](
         count=count,
         page=page,
@@ -118,7 +130,7 @@ async def get_pairs(user: User = Depends(get_current_user),
 async def get_pair(
     id: int,
     user: Annotated[User, Depends(get_current_user)],
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_read_session)],
 ) -> TextPairDto:
     # async with async_session() as session:
     dbres = await session.execute(
@@ -132,8 +144,8 @@ async def get_pair(
         return TextPairDto(
             id=d.id,
             user_id=d.user_id,
-            text1=d.text1,
-            text2=d.text2,
+            text1=split_text_pair(d.text1),
+            text2=split_text_pair(d.text2),
             is_learned_flg=d.is_learned_flg,
         )
     raise HTTPException(status_code=404, detail="TextPair not found")
