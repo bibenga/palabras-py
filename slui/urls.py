@@ -26,7 +26,7 @@ router.register("studying", views.StudyingViewSet, "studying")
 
 urlpatterns = [
     path("", views.index, name="index"),
-    path("register", views.register, name="register"),
+    path("login", views.loginOrRegister, name="login"),
     path("studying", views.studying, name="studying"),
 
     path('api/openapi.yml',

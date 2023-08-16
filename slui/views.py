@@ -1,7 +1,9 @@
 import random
+from django import forms
 from django.conf import settings
 from django.shortcuts import render
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
+from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db import transaction
@@ -135,10 +137,36 @@ def index(request):
     return render(request, "slui/index.html")
 
 
-@require_GET
-@login_required
-def register(request):
-    return render(request, "slui/register.html")
+# @require_GET
+# @login_required
+# def register(request):
+#     return render(request, "slui/register.html")
+
+
+class LoginOrRegisterForm(forms.Form):
+    username = forms.CharField(label="Username", max_length=1)
+    password = forms.CharField(label="Password", max_length=100, widget=forms.PasswordInput())
+
+
+def loginOrRegister(request):
+    if request.method == "POST":
+        form = LoginOrRegisterForm(request.POST)
+
+        form.is_valid()
+        # if form.is_valid():
+        #     user = authenticate(username=form.username, password=form.password)
+        #     if user is not None:
+        #         # A backend authenticated the credentials
+        #         ...
+        #     else:
+        #         # No backend authenticated the credentials
+        #         ...
+
+        return render(request, "slui/register-form.html", {"form": form})
+
+    else:
+        form = LoginOrRegisterForm()
+        return render(request, "slui/register.html", {"form": form})
 
 
 @require_GET
