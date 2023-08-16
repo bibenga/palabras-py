@@ -1,13 +1,14 @@
 import random
 from django import forms
 from django.conf import settings
-from django.shortcuts import render
-from django.views.decorators.http import require_GET, require_POST
-from django.contrib.auth import authenticate
+from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.views.decorators.http import require_GET
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db import transaction
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from rest_framework.viewsets import ViewSetMixin
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -145,22 +146,30 @@ def index(request):
 
 class LoginOrRegisterForm(forms.Form):
     username = forms.CharField(label="Username", max_length=1)
-    password = forms.CharField(label="Password", max_length=100, widget=forms.PasswordInput())
+    password = forms.CharField(label="Password", max_length=100,
+                               widget=forms.PasswordInput())
 
 
 def loginOrRegister(request):
     if request.method == "POST":
         form = LoginOrRegisterForm(request.POST)
 
-        form.is_valid()
-        # if form.is_valid():
-        #     user = authenticate(username=form.username, password=form.password)
-        #     if user is not None:
-        #         # A backend authenticated the credentials
-        #         ...
-        #     else:
-        #         # No backend authenticated the credentials
-        #         ...
+        # form.is_valid()
+        if form.is_valid():
+            user = authenticate(request,
+                                username=form.cleaned_data['username'],
+                                password=form.cleaned_data['password'])
+            if user is not None:
+                login(request, user)
+                # response = redirect("studying")
+                # response['HX-Redirect'] = response['Location']
+                response = HttpResponse()
+                response['HX-Location'] = request.build_absolute_uri(
+                    reverse('studying'))
+                return response
+            else:
+                # No backend authenticated the credentials
+                ...
 
         return render(request, "slui/register-form.html", {"form": form})
 
