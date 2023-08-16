@@ -7,16 +7,20 @@
 
     {{ form.non_field_errors }}
     <div class="mb-3">
-        {{ form.username.errors }}
-        <!-- {{ form.username }} -->
         <!-- required -->
-        <input type="text" name="username" id="inputEmail" class="form-control" placeholder="Email address" autofocus>
+        <input type="text" name="username" value="{{form.username.value|default:''}}"
+            class="form-control {% if form.username.errors %}is-invalid{% endif %}" placeholder="Username" autofocus>
+        <div class="invalid-feedback">
+            {{ form.username.errors }}
+        </div>
     </div>
     <div class="mb-3">
-        {{ form.password.errors }}
-        <!-- {{ form.password }} -->
         <!-- required -->
-        <input type="password" name="password" id="inputPassword" class="form-control" placeholder="Password">
+        <input type="password" name="password" class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+            placeholder="Password">
+        <div class="invalid-feedback">
+            {{ form.password.errors }}
+        </div>
     </div>
 
     <button class="btn btn-lg btn-primary btn-block" type="submit">Register / Sign in</button>
