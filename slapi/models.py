@@ -13,18 +13,6 @@ class Base(AsyncAttrs, DeclarativeBase):
 class User(Base):
     __tablename__ = "slid_user"
 
-    # "id" integer NOT NULL PRIMARY KEY AUTOINCREMENT
-    # "password" varchar(128) NOT NULL
-    # "last_login" datetime NULL
-    # "is_superuser" bool NOT NULL
-    # "username" varchar(150) NOT NULL UNIQUE
-    # "first_name" varchar(150) NOT NULL
-    # "last_name" varchar(150) NOT NULL
-    # "email" varchar(254) NOT NULL
-    # "is_staff" bool NOT NULL
-    # "is_active" bool NOT NULL
-    # "date_joined" datetime NOT NULL
-
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(String(150),  unique=True)
     password: Mapped[str] = mapped_column(String(128))
@@ -43,15 +31,6 @@ class User(Base):
 
 class TextPair(Base):
     __tablename__ = "slfrase_textpair"
-    # "id" integer NOT NULL PRIMARY KEY AUTOINCREMENT
-    # "text1" text NOT NULL
-    # "text2" text NOT NULL
-    # "is_learned_flg" bool NOT NULL
-    # "learned_ts" datetime NULL
-    # "created_ts" datetime NOT NULL
-    # "modified_ts" datetime NOT NULL
-    # "user_id" bigint NOT NULL REFERENCES "slid_user" ("id") DEFERRABLE INITIALLY DEFERRED
-    # "comment" text NOT NULL
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("slid_user.id"))
@@ -75,16 +54,6 @@ class TextPair(Base):
 
 class StudyState(Base):
     __tablename__ = "slfrase_studystate"
-    # "id" integer NOT NULL PRIMARY KEY AUTOINCREMENT
-    # "is_passed_flg" bool NOT NULL
-    # "passed_ts" datetime NULL
-    # "created_ts" datetime NOT NULL
-    # "modified_ts" datetime NOT NULL
-    # "text_pair_id" bigint NOT NULL REFERENCES "slfrase_textpair" ("id") DEFERRABLE INITIALLY DEFERRED
-    # "is_skipped_flg" bool NOT NULL
-    # "answer" text NOT NULL
-    # "possible_answers" text NOT NULL
-    # "question" text NOT NULL
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     text_pair_id: Mapped[int] = mapped_column(ForeignKey("slfrase_textpair.id"))
