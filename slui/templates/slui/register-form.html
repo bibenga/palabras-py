@@ -1,6 +1,6 @@
 {% load static %}
 
-<form class="form-signin" hx-post="/login">
+<form class="form-signin" hx-post="/login" hx-swap="outerHTML">
     {% csrf_token %}
     <img class="mb-4" src="{% static 'slui/favicon-128x128.png' %}" alt="" width="72" height="72">
     <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
