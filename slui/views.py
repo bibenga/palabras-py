@@ -1,11 +1,14 @@
 import random
-from django import forms
 from django.conf import settings
-from django.shortcuts import redirect, render
+from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_GET
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import login
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.debug import sensitive_post_parameters
 from django.utils import timezone
 from django.db import transaction
 from django.http import Http404, HttpResponse
@@ -138,27 +141,16 @@ def index(request):
     return render(request, "slui/index.html")
 
 
-# @require_GET
-# @login_required
-# def register(request):
-#     return render(request, "slui/register.html")
-
-
-class LoginOrRegisterForm(forms.Form):
-    username = forms.CharField(label="Username", max_length=1)
-    password = forms.CharField(label="Password", max_length=100,
-                               widget=forms.PasswordInput())
-
-
+@sensitive_post_parameters()
+@csrf_protect
+@never_cache
 def loginOrRegister(request):
     if request.method == "POST":
-        form = LoginOrRegisterForm(request.POST)
+        form = AuthenticationForm(request, request.POST)
 
-        # form.is_valid()
         if form.is_valid():
-            user = authenticate(request,
-                                username=form.cleaned_data['username'],
-                                password=form.cleaned_data['password'])
+            user = form.get_user()
+            print(user)
             if user is not None:
                 login(request, user)
                 # response = redirect("studying")
@@ -174,7 +166,7 @@ def loginOrRegister(request):
         return render(request, "slui/register-form.html", {"form": form})
 
     else:
-        form = LoginOrRegisterForm()
+        form = AuthenticationForm(request)
         return render(request, "slui/register.html", {"form": form})
 
 

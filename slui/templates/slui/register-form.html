@@ -5,7 +5,9 @@
     <img class="mb-4" src="{% static 'slui/favicon-128x128.png' %}" alt="" width="72" height="72">
     <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
 
-    {{ form.non_field_errors }}
+    <div class="mb-3 text-danger">
+        {{ form.non_field_errors }}
+    </div>
     <div class="mb-3">
         <!-- required -->
         <input type="text" name="username" value="{{form.username.value|default:''}}"
