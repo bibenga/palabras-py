@@ -28,6 +28,7 @@ urlpatterns = [
     path("", views.index, name="index"),
     path("login", views.loginOrRegister, name="login"),
     path("studying", views.studying, name="studying"),
+    path("studying2", views.studying_htmx, name="studying_htmx"),
 
     path('api/openapi.yml',
          get_schema_view(

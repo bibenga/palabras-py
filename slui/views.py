@@ -1,6 +1,7 @@
 import random
+from django import forms
 from django.conf import settings
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET
 from django.contrib.auth import login
@@ -177,4 +178,84 @@ def studying(request):
     return render(request, "slui/studying.html", {
         "CSRF_COOKIE_NAME": settings.CSRF_COOKIE_NAME,
         "CSRF_HEADER_NAME": settings.CSRF_HEADER_NAME,
+    })
+
+
+class AnswerForm(forms.Form):
+    answer = forms.CharField(widget=forms.TextInput(attrs={"autofocus": True}))
+
+
+@login_required
+@transaction.atomic
+def studying_htmx(request):
+    user = request.user
+
+    def get_state():
+        state_qs = StudyState.objects.filter(
+            text_pair__user=user,
+            is_passed_flg=False,
+            is_skipped_flg=False,
+        ).select_related(
+            "text_pair"
+        ).order_by("created_ts")
+        state = state_qs.last()
+        if state == None:
+            text_pair_qs = TextPair.objects.filter(
+                user=user
+            ).order_by("?")
+            text_pair = None
+            if text_pair is None:
+                text_pair = text_pair_qs.first()
+            if text_pair is None:
+                raise Http404
+            if random.random() <= 0.5:
+                question = text_pair.text1
+                possible_answers = text_pair.text2
+            else:
+                question = text_pair.text2
+                possible_answers = text_pair.text1
+            question = TextPair.get_text_list(question)[0]
+            state = StudyState.objects.create(
+                text_pair=text_pair,
+                question=question,
+                possible_answers=possible_answers,
+            )
+        if state_qs.count() > 1:
+            state_qs.exclude(
+                pk=state.pk
+            ).update(
+                is_skipped_flg=True,
+                passed_ts=timezone.now(),
+            )
+        return state
+
+    state = get_state()
+
+    if request.method == "POST":
+        if "siguiente" in request.POST:
+            if not state.is_skipped_flg:
+                state.is_skipped_flg = True
+                state.save()
+            # state = get_state()
+            return redirect("studying_htmx")
+
+        elif "sé" in request.POST:
+            text_pair = state.text_pair
+            if not text_pair.is_learned_flg:
+                text_pair.is_learned_flg = True
+                text_pair.save()
+            # state = get_state()
+            return redirect("studying_htmx")
+
+        else: # entregar
+            form = AnswerForm(request.POST)
+            if form.is_valid():
+                pass
+
+    else:
+        form = AnswerForm()
+
+    return render(request, "slui/studying.htmx.html", {
+        "state": state,
+        "form": form,
     })

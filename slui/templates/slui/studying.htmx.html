@@ -1,0 +1,95 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <link rel="icon" href="{% static 'slui/favicon-32x32.png' %}">
+
+    <link rel="stylesheet" href="{% static 'slui/bootstrap-5.2.3/css/bootstrap.min.css' %}">
+    <script type="text/javascript" src="{% static 'slui/bootstrap-5.2.3/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'slui/htmx.min.js' %}"></script>
+
+    <title>Palabras</title>
+</head>
+
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg  navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img src="{% static 'slui/favicon-32x32.png' %}" width="30" height="30" class="d-inline-block align-top"
+                    alt="">
+                El aprendizaje en LagunaSegura
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo02"
+                aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/studying">Studying</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" aria-current="page" href="/manage">Manage</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container bd-gutter mt-3 my-md-4 bd-layout">
+        <form method="post" autocomplete="off">
+            {% csrf_token %}
+            <div class="card">
+                <div class="card-header">
+                    Prueba
+                </div>
+                <div class="card-body">
+                    <p style="min-height: 3em;">
+                        <span style="cursor: default; text-decoration-line: underline; text-decoration-style: dotted;"
+                            data-bs-toggle="tooltip" data-bs-placement="bottom"
+                            data-bs-title="{{ state.possible_answers|join:', ' }}">
+                            {{ state.question }}
+                        </span>
+                    </p>
+
+                    <div class="row">
+                        <div class="col p-3">
+                            <textarea name="answer" autofocus class="form-control form-control-lg"></textarea>
+                            <div class="invalid-feedback">
+                                La respuesta es incorrecta.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <button name="entregar" class="btn btn-lg btn-primary mb-3" role="button">Entregar</button>
+                        </div>
+                        <div class="col text-end">
+                            <button name="siguiente" class="btn btn-lg btn-light mb-3" role="button">Siguiente</button>
+                            <button name="sé" class="btn btn-lg btn-light mb-3" role="button">¡Lo sé!</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        htmx.onLoad((content) => {
+            const tooltipElList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+            const tooltipList = [...tooltipElList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+            var answerEl = document.querySelector('[name="answer"]');
+            answerEl.focus();
+        });
+    </script>
+
+</body>
+
+</html>
