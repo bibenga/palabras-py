@@ -187,7 +187,7 @@ class AnswerForm(forms.ModelForm):
 
     class Meta:
         model = StudyState
-        fields = ['answer']
+        fields = ['answer', 'is_passed_flg']
 
     def clean_answer(self):
         answer = self.cleaned_data["answer"]
@@ -197,17 +197,22 @@ class AnswerForm(forms.ModelForm):
                     for x in TextPair.get_text_list(self.instance.possible_answers)]
 
         is_passed_flg = answer in variants
+        print('clean_answer', is_passed_flg)
         if not is_passed_flg:
             raise forms.ValidationError("La respuesta es incorrecta.")
 
         self.cleaned_data["is_passed_flg"] = is_passed_flg
 
         return answer
+    
+    def clean_is_passed_flg(self):
+        print('clean_is_passed_flg', self.data.get('is_passed_flg'),  self.cleaned_data["is_passed_flg"])
+        return self.cleaned_data["is_passed_flg"]
 
-    def full_clean(self) -> None:
-        super().full_clean()
-        if hasattr(self, 'cleaned_data'):
-            self.instance.is_passed_flg = self.cleaned_data['is_passed_flg']
+    # def full_clean(self) -> None:
+    #     super().full_clean()
+    #     if hasattr(self, 'cleaned_data'):
+    #         self.instance.is_passed_flg = self.cleaned_data['is_passed_flg']
 
 
 @login_required
@@ -248,7 +253,7 @@ def studying_htmx(request):
                 question=question,
                 possible_answers=possible_answers,
             )
-        if state_qs.count() > 1:
+        if new and state_qs.count() > 1:
             state_qs.exclude(
                 pk=state.pk
             ).update(
