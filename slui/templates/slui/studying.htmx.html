@@ -53,16 +53,18 @@
                     <p style="min-height: 3em;">
                         <span style="cursor: default; text-decoration-line: underline; text-decoration-style: dotted;"
                             data-bs-toggle="tooltip" data-bs-placement="bottom"
-                            data-bs-title="{{ state.possible_answers|join:', ' }}">
+                            data-bs-title="{{ state.possible_answers }}">
                             {{ state.question }}
                         </span>
                     </p>
 
                     <div class="row">
                         <div class="col p-3">
-                            <textarea name="answer" autofocus class="form-control form-control-lg"></textarea>
+                            <textarea name="answer"
+                                class="form-control form-control-lg {% if form.answer.errors %}is-invalid{% endif %}"
+                                autofocus>{{form.answer.value|default:''}}</textarea>
                             <div class="invalid-feedback">
-                                La respuesta es incorrecta.
+                                {{ form.answer.errors }}
                             </div>
                         </div>
                     </div>

@@ -181,9 +181,25 @@ def studying(request):
     })
 
 
-class AnswerForm(forms.Form):
+class AnswerForm(forms.ModelForm):
     answer = forms.CharField(widget=forms.TextInput(attrs={"autofocus": True}))
 
+    class Meta:
+        model = StudyState
+        fields = ['answer']
+
+    def clean_answer(self):
+        answer = self.cleaned_data["answer"]
+
+        answer = TextPair.get_words(answer.lower())
+        variants = [TextPair.get_words(x.lower())
+                    for x in TextPair.get_text_list(self.instance.possible_answers)]
+
+        is_passed_flg = answer in variants
+        if not is_passed_flg:
+            raise forms.ValidationError("La respuesta es incorrecta.")
+
+        return answer
 
 @login_required
 @transaction.atomic
@@ -248,12 +264,12 @@ def studying_htmx(request):
             return redirect("studying_htmx")
 
         else: # entregar
-            form = AnswerForm(request.POST)
+            form = AnswerForm(request.POST, instance=state)
             if form.is_valid():
                 pass
 
     else:
-        form = AnswerForm()
+        form = AnswerForm(instance=state)
 
     return render(request, "slui/studying.htmx.html", {
         "state": state,
