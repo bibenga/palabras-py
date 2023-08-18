@@ -1,4 +1,5 @@
 import random
+from typing import Any, Dict
 from django import forms
 from django.conf import settings
 from django.shortcuts import redirect, render
@@ -199,21 +200,32 @@ class AnswerForm(forms.ModelForm):
         if not is_passed_flg:
             raise forms.ValidationError("La respuesta es incorrecta.")
 
+        self.cleaned_data["is_passed_flg"] = is_passed_flg
+
         return answer
+
+    def full_clean(self) -> None:
+        super().full_clean()
+        if hasattr(self, 'cleaned_data'):
+            self.instance.is_passed_flg = self.cleaned_data['is_passed_flg']
+
 
 @login_required
 @transaction.atomic
 def studying_htmx(request):
     user = request.user
 
-    def get_state():
+    def get_state(new: bool) -> StudyState:
         state_qs = StudyState.objects.filter(
             text_pair__user=user,
-            is_passed_flg=False,
-            is_skipped_flg=False,
         ).select_related(
             "text_pair"
         ).order_by("created_ts")
+        if new:
+            state_qs = state_qs.filter(
+                is_passed_flg=False,
+                is_skipped_flg=False,
+            )
         state = state_qs.last()
         if state == None:
             text_pair_qs = TextPair.objects.filter(
@@ -245,9 +257,9 @@ def studying_htmx(request):
             )
         return state
 
-    state = get_state()
-
     if request.method == "POST":
+        state = get_state(False)
+
         if "siguiente" in request.POST:
             if not state.is_skipped_flg:
                 state.is_skipped_flg = True
@@ -263,12 +275,16 @@ def studying_htmx(request):
             # state = get_state()
             return redirect("studying_htmx")
 
-        else: # entregar
-            form = AnswerForm(request.POST, instance=state)
-            if form.is_valid():
-                pass
+        else:  # entregar
+            if state.is_passed_flg or state.is_skipped_flg:
+                return redirect("studying_htmx")
+            else:
+                form = AnswerForm(request.POST, instance=state)
+                if form.is_valid():
+                    form.save()
 
     else:
+        state = get_state(True)
         form = AnswerForm(instance=state)
 
     return render(request, "slui/studying.htmx.html", {
