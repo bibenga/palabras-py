@@ -38,10 +38,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # "django_extensions",
     "rest_framework",
     "drf_yasg",
-    # "webpush",
     "slid",
     "slfrase",
     "slui",
@@ -50,7 +48,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     # "django.middleware.cache.UpdateCacheMiddleware",
-    # "django.middleware.gzip.GZipMiddleware",
+    "django.middleware.gzip.GZipMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -195,15 +193,3 @@ REST_FRAMEWORK = {
         "rest_framework.filters.OrderingFilter",
     ),
 }
-
-
-# WEBPUSH_SETTINGS = {
-#     "VAPID_PUBLIC_KEY": "BBCi8IDHp51MrxoOd9u2i7ySFnlmmLpTGmJHelE8F5o-4SQqQc1Dg5FQjwWh0EEfRgeGJ8R9LwbOunNbUKFcku8",
-#     "VAPID_PRIVATE_KEY":"kYmF0cKXLBsEqj6004yk6zF7q-IEpfQ7RYJlI_gbc-0",
-#     "VAPID_ADMIN_EMAIL": "admin@example.com"
-# }
-# from django.contrib.auth import get_user_model
-# User = get_user_model()
-# user = User.objects.filter(username="a").get()
-# from webpush import send_user_notification
-# send_user_notification(user=user, payload={"head": "Welcome!", "body": "Hello World"}, ttl=100000)
