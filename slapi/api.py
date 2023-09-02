@@ -15,17 +15,17 @@ from slapi.db import engine, async_session
 app = FastAPI()
 basic_security = HTTPBasic()
 
-# try:
-#     from slapi.admin_starlette_admin import admin
-#     admin.mount_to(app)
-# except ImportError:
-#     logging.getLogger().fatal('admin not installed', exc_info=True)
-
 try:
-    from slapi.admin_sqladmin import mount
-    mount(app, engine)
+    from slapi.admin_starlette_admin import admin
+    admin.mount_to(app)
 except ImportError:
     logging.getLogger().fatal('admin not installed', exc_info=True)
+
+# try:
+#     from slapi.admin_sqladmin import mount
+#     mount(app, engine)
+# except ImportError:
+#     logging.getLogger().fatal('admin not installed', exc_info=True)
 
 
 async def get_read_session() -> AsyncIterator[AsyncSession]:
