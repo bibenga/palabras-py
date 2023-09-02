@@ -25,7 +25,6 @@ urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),
     # path("accounts/login/", auth_views.LoginView.as_view()),
     # path("accounts/logout/", auth_views.LogoutView.as_view()),
-    # path("webpush/", include('webpush.urls')),
 ] 
 
 # from django.conf import settings

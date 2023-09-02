@@ -28,6 +28,9 @@ class User(Base):
     # async def __admin_repr__(self, request: Request):
     #     return self.username
 
+    def __str__(self):
+        return self.username
+
 
 class TextPair(Base):
     __tablename__ = "slfrase_textpair"

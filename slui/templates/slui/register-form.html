@@ -1,0 +1,31 @@
+{% load static %}
+
+<form class="form-signin" hx-post="/login" hx-swap="outerHTML">
+    {% csrf_token %}
+    <img class="mb-4" src="{% static 'slui/favicon-128x128.png' %}" alt="" width="72" height="72">
+    <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
+
+    <div class="mb-3 text-danger">
+        {{ form.non_field_errors }}
+    </div>
+    <div class="mb-3">
+        <!-- required -->
+        <input type="text" name="username" value="{{form.username.value|default:''}}"
+            class="form-control {% if form.username.errors %}is-invalid{% endif %}" placeholder="Username" autofocus>
+        <div class="invalid-feedback">
+            {{ form.username.errors }}
+        </div>
+    </div>
+    <div class="mb-3">
+        <!-- required -->
+        <input type="password" name="password" class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+            placeholder="Password">
+        <div class="invalid-feedback">
+            {{ form.password.errors }}
+        </div>
+    </div>
+
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Register / Sign in</button>
+
+    <p class="mt-5 mb-3 text-muted">&copy; 2023</p>
+</form>
