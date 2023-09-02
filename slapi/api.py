@@ -9,7 +9,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from django.contrib.auth.hashers import PBKDF2PasswordHasher
 from slapi.models import TextPair, User
-from slapi.db import engine, async_session
+from slapi.db import async_session
 
 
 app = FastAPI()
@@ -22,8 +22,8 @@ except ImportError:
     logging.getLogger().fatal('admin not installed', exc_info=True)
 
 # try:
-#     from slapi.admin_sqladmin import mount
-#     mount(app, engine)
+#     from slapi.admin_sqladmin import setup
+#     setup(app, engine)
 # except ImportError:
 #     logging.getLogger().fatal('admin not installed', exc_info=True)
 

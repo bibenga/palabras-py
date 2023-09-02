@@ -1,4 +1,5 @@
 from sqlalchemy import select, update
+from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.middleware import Middleware
@@ -61,14 +62,17 @@ class UsernameAndPasswordProvider(AuthProvider):
 
 
 # Create admin
-admin = Admin(engine, title="Palabras admin",
-              auth_provider=UsernameAndPasswordProvider(),
-              middlewares=[Middleware(
-                  SessionMiddleware,
-                  secret_key="SuperSecret :)",
-                  session_cookie="starlette_session")
-              ],
-              debug=True)
+admin = Admin(
+    engine,
+    title="Palabras admin",
+    auth_provider=UsernameAndPasswordProvider(),
+    middlewares=[Middleware(
+        SessionMiddleware,
+        secret_key="SuperSecret :)",
+        session_cookie="starlette_session")
+    ],
+    debug=True,
+)
 
 
 class UserModelView(ModelView):
@@ -129,8 +133,14 @@ admin.add_view(TextPairModelView(TextPair))
 
 class StudyStateModelView(ModelView):
     # exclude_fields_from_list = [User.password]
-    exclude_fields_from_create = [StudyState.created_ts, StudyState.modified_ts]
+    exclude_fields_from_create = [
+        StudyState.created_ts, StudyState.modified_ts]
     exclude_fields_from_edit = [StudyState.created_ts, StudyState.modified_ts]
 
 
 admin.add_view(StudyStateModelView(StudyState))
+
+
+def setup(app: Starlette) -> None:
+    from slapi.admin_starlette_admin import admin
+    admin.mount_to(app)

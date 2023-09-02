@@ -47,7 +47,7 @@ class TextPairAdmin(ModelView, model=TextPair):
     }
 
 
-def mount(app: Starlette, engine: AsyncEngine) -> Admin:
+def setup(app: Starlette, engine: AsyncEngine) -> Admin:
     auth_backend = AdminAuth(secret_key="SuperSecret :)")
     admin = Admin(app, engine, authentication_backend=auth_backend)
     admin.add_view(UserAdmin)
