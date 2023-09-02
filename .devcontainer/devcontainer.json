@@ -3,7 +3,7 @@
 {
 	"name": "Palabras & Python 3 & Django",
 
-	"image": "mcr.microsoft.com/devcontainers/python:0-3.11",
+	"image": "mcr.microsoft.com/devcontainers/python:3.11",
 	"runArgs": ["--name", "palabras-py"],
 	"remoteEnv": {
 		"PYTHONUNBUFFERED": "1",
@@ -17,7 +17,7 @@
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// This can be used to network with other containers or the host.
-	"forwardPorts": [8000],
+	"forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "pip install --user -U pip setuptools && pip install --user -r requirements.txt",
