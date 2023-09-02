@@ -33,3 +33,4 @@ uvicorn
 aiofiles
 # starlette-admin
 # itsdangerous
+# sqladmin
