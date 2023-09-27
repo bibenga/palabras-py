@@ -3,6 +3,7 @@ from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.middleware import Middleware
+from starlette.datastructures import Secret
 from starlette.middleware.sessions import SessionMiddleware
 from starlette_admin.actions import action
 from starlette_admin.contrib.sqla.admin import Admin
@@ -66,10 +67,11 @@ admin = Admin(
     engine,
     title="Palabras admin",
     auth_provider=UsernameAndPasswordProvider(),
-    middlewares=[Middleware(
-        SessionMiddleware,
-        secret_key="SuperSecret :)",
-        session_cookie="starlette_session")
+    middlewares=[
+        Middleware(SessionMiddleware,
+                   secret_key=Secret("SuperSecret :)"),
+                   path="/admin",
+                   session_cookie="palabras-admin"),
     ],
     debug=True,
 )
@@ -142,5 +144,4 @@ admin.add_view(StudyStateModelView(StudyState))
 
 
 def setup(app: Starlette) -> None:
-    from slapi.admin_starlette_admin import admin
     admin.mount_to(app)

@@ -3,6 +3,7 @@ import logging
 from math import ceil
 from typing import Annotated, AsyncIterator, Generic, List, TypeVar
 from fastapi import Query, status, Depends, FastAPI, HTTPException
+from fastapi.middleware import Middleware
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
@@ -10,18 +11,26 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from django.contrib.auth.hashers import PBKDF2PasswordHasher
 from slapi.models import TextPair, User
 from slapi.db import async_session
+from starlette.middleware.sessions import SessionMiddleware
 
+
+# logging.basicConfig(level=logging.INFO)
+
+# middleware = [
+#     Middleware(SessionMiddleware, secret_key="Olala")
+# ]
 
 app = FastAPI()
 basic_security = HTTPBasic()
 
 try:
-    from slapi.admin_starlette_admin import admin
-    admin.mount_to(app)
+    from slapi.admin_starlette_admin import setup
+    setup(app)
 except ImportError:
     logging.getLogger().fatal('admin not installed', exc_info=True)
 
 # try:
+#     from slapi.db import engine
 #     from slapi.admin_sqladmin import setup
 #     setup(app, engine)
 # except ImportError:

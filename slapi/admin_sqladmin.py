@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncEngine
 from starlette.applications import Starlette
@@ -8,19 +9,25 @@ from sqladmin.authentication import AuthenticationBackend
 from slapi.models import User, TextPair
 
 
+l = logging.getLogger("admin")
+
 class AdminAuth(AuthenticationBackend):
     async def login(self, request: Request) -> bool:
         form = await request.form()
-        username, password = form["username"], form["password"]
+        username = form.get("username", None) 
+        password = form.get("password", None)
+        l.info("try auth: %s", username)
         request.session.update({"token": "1"})
         return True
 
     async def logout(self, request: Request) -> bool:
+        l.info("logout")
         request.session.clear()
         return True
 
     async def authenticate(self, request: Request) -> Optional[Response]:
-        token = request.session.get("token")
+        token = request.session.get("token", None)
+        l.info("check token: %s", token)
         if not token:
             return RedirectResponse(request.url_for("admin:login"), status_code=302)
         return None
